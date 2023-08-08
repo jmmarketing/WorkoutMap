@@ -14,7 +14,7 @@ const inputElevation = document.querySelector('.form__input--elevation');
 // Application Data
 class Workout {
   date = new Date();
-  id = (new Date().getTime() + '').slice(-10);
+  id = (Date.now() + '').slice(-10);
   constructor(coords, distance, duration) {
     // this.id = id;
     this.distance = distance; // in Miles
@@ -50,12 +50,10 @@ class Cycling extends Workout {
   }
 }
 
-const testRunner = new Running(
-  [32.94257323521854, -117.25656509399415],
-  10,
-  120,
-  80
-);
+/////// Testing Classes
+const testRunner = new Running([32.9425, -117.256565], 10, 120, 134);
+const testCycle = new Cycling([32, -117.25], 43.2, 30, 400);
+console.log(testCycle, testRunner);
 
 ///////////////////////////////////////
 // Application Architecture.
