@@ -33,7 +33,7 @@ class Running extends Workout {
   }
 
   calcPace() {
-    this.pace = this.duration / this.distance;
+    this.pace = (this.duration / this.distance).toFixed(1);
     return this.pace;
   }
 }
@@ -47,7 +47,7 @@ class Cycling extends Workout {
   }
 
   calcSpeed() {
-    this.speed = this.distance / (this.duration / 60); //Per hour so divide by 60
+    this.speed = (this.distance / (this.duration / 60)).toFixed(1); //Per hour so divide by 60
     return this.speed;
   }
 }
@@ -113,32 +113,62 @@ class App {
   _newWorkout(e) {
     e.preventDefault();
 
+    // Helper functions for Validation
+    function isValid(...inputs) {
+      return inputs.every(inp => Number.isFinite(inp));
+    }
+    function aboveZero(...inputs) {
+      return inputs.every(inp => inp > 0);
+    }
+
+    const type = inputType.value;
     const { lat, lng } = this.#mapEvent.latlng;
 
     const coords = [lat, lng];
-    const distanceVal = inputDistance.value;
-    const durationVal = inputDuration.value;
-    const cadenceVal = inputCadence.value;
-    const elevationVal = inputElevation.value;
+    const distanceVal = +inputDistance.value;
+    const durationVal = +inputDuration.value;
     let workout;
 
-    if (inputType.value === 'running') {
+    ///// Creates Running Child Workout
+    if (type === 'running') {
+      const cadenceVal = +inputCadence.value;
+      // Form Validation
+      if (
+        !isValid(distanceVal, durationVal, cadenceVal) ||
+        !aboveZero(distanceVal, durationVal, cadenceVal)
+      )
+        return alert('Positive Numbers Only');
+
       workout = new Running(coords, distanceVal, durationVal, cadenceVal);
-    } else {
+    }
+
+    /// Creates Cycling Child Workout
+    if (type === 'cycling') {
+      const elevationVal = +inputElevation.value;
+      // Form Validation
+      if (
+        !isValid(distanceVal, durationVal, elevationVal) ||
+        !aboveZero(distanceVal, durationVal)
+      )
+        return alert('Positive Numbers Only');
+
       workout = new Cycling(coords, distanceVal, durationVal, elevationVal);
     }
+
+    // Next Steps with Child Workout
     this.#workouts.push(workout);
-    this._renderWorkoutMarker(coords, inputType.value);
+    this._renderWorkoutMarker(workout);
     this._renderWorkout(workout);
     console.log(this.#workouts);
+
+    this._hideForm();
   }
 
   _renderWorkout(workout) {
     const isRunning = workout.type === 'running';
 
-    const workoutDetails = `<li class="workout workout--${
-      workout.type
-    }" data-id="${workout.id}">
+    const workoutDetails = `
+    <li class="workout workout--${workout.type}" data-id="${workout.id}">
     <h2 class="workout__title">${isRunning ? 'Running' : 'Cycling'} on ${
       months[workout.date.getMonth()]
     } ${workout.date.getDate()}</h2>
@@ -171,9 +201,9 @@ class App {
     containerWorkouts.insertAdjacentHTML('beforeend', workoutDetails);
   }
 
-  _renderWorkoutMarker(coords, classType) {
+  _renderWorkoutMarker(workoutObj) {
     // Shows Marker
-    L.marker(coords)
+    L.marker(workoutObj.coords)
       .addTo(this.#map)
       .bindPopup(
         L.popup({
@@ -182,14 +212,13 @@ class App {
           autoClose: false,
           closeOnClick: false,
           content: `${
-            classType === 'running' ? '🏃🏽‍♂️ Running' : '🚴🏽‍♂️ Cycling'
+            workoutObj.type === 'running' ? '🏃🏽‍♂️ Running' : '🚴🏽‍♂️ Cycling'
           } Workout`,
-          className: `${classType}-popup`,
+          className: `${workoutObj.type}-popup`,
         })
       )
       // .setPopupContent('🏀 Workout')
       .openPopup();
-    this._hideForm();
   }
 
   _hideForm() {
@@ -202,7 +231,7 @@ class App {
   }
 
   _moveToPopup(e) {
-    if (e.target.closest('.workout').dataset.id) {
+    if (e.target.closest('.workout')?.dataset.id ?? undefined) {
       const workoutId = e.target.closest('.workout').dataset.id;
       for (let workoutItem of this.#workouts) {
         if (workoutItem.id === workoutId) {
