@@ -70,6 +70,7 @@ class App {
     form.addEventListener('submit', this._newWorkout.bind(this));
     // Adds Event Listener on Form Change (Doesnt call this in function so no need to bind)
     inputType.addEventListener('change', this._toggleElevationField);
+    containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
   }
 
   _getPosition() {
@@ -200,7 +201,17 @@ class App {
         '';
   }
 
-  _moveToPopup(e) {}
+  _moveToPopup(e) {
+    if (e.target.closest('.workout').dataset.id) {
+      const workoutId = e.target.closest('.workout').dataset.id;
+      for (let workoutItem of this.#workouts) {
+        if (workoutItem.id === workoutId) {
+          this.#map.setView(workoutItem.coords, 13);
+        }
+      }
+    }
+  }
+
   _setLocalStorage() {}
   _getLocalStorage() {}
   reset() {}
