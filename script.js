@@ -25,6 +25,7 @@ class Workout {
 }
 
 class Running extends Workout {
+  type = 'running';
   constructor(coords, distance, duration, cadence) {
     super(coords, distance, duration);
     this.cadence = cadence;
@@ -38,6 +39,7 @@ class Running extends Workout {
 }
 
 class Cycling extends Workout {
+  type = 'cycling';
   constructor(coords, distance, duration, elevationGain) {
     super(coords, distance, duration);
     this.elevationGain = elevationGain;
@@ -51,15 +53,16 @@ class Cycling extends Workout {
 }
 
 /////// Testing Classes
-const testRunner = new Running([32.9425, -117.256565], 10, 120, 134);
-const testCycle = new Cycling([32, -117.25], 43.2, 30, 400);
-console.log(testCycle, testRunner);
+// const testRunner = new Running([32.9425, -117.256565], 10, 120, 134);
+// const testCycle = new Cycling([32, -117.25], 43.2, 30, 400);
+// console.log(testCycle, testRunner);
 
 ///////////////////////////////////////
 // Application Architecture.
 class App {
   #map;
   #mapEvent;
+  #workouts = [];
   constructor() {
     // Will Trigger Method On Child Class Creation
     this._getPosition();
@@ -109,10 +112,67 @@ class App {
   _newWorkout(e) {
     e.preventDefault();
 
-    // Shows Marker
     const { lat, lng } = this.#mapEvent.latlng;
-    console.log(lat, lng);
-    L.marker([lat, lng])
+
+    const coords = [lat, lng];
+    const distanceVal = inputDistance.value;
+    const durationVal = inputDuration.value;
+    const cadenceVal = inputCadence.value;
+    const elevationVal = inputElevation.value;
+    let workout;
+
+    if (inputType.value === 'running') {
+      workout = new Running(coords, distanceVal, durationVal, cadenceVal);
+    } else {
+      workout = new Cycling(coords, distanceVal, durationVal, elevationVal);
+    }
+    this.#workouts.push(workout);
+    this._renderWorkoutMarker(coords, inputType.value);
+    this._renderWorkout(workout);
+    console.log(this.#workouts);
+  }
+
+  _renderWorkout(workout) {
+    const isRunning = workout.type === 'running';
+
+    const workoutDetails = `<li class="workout workout--${
+      workout.type
+    }" data-id="${workout.id}">
+    <h2 class="workout__title">${isRunning ? 'Running' : 'Cycling'} on ${
+      months[workout.date.getMonth()]
+    } ${workout.date.getDate()}</h2>
+    <div class="workout__details">
+      <span class="workout__icon">${isRunning ? '🏃‍♂️' : '🚴🏽‍♂️'}</span>
+      <span class="workout__value">${workout.distance}</span>
+      <span class="workout__unit">mi</span>
+    </div>
+    <div class="workout__details">
+      <span class="workout__icon">⏱</span>
+      <span class="workout__value">${workout.duration}</span>
+      <span class="workout__unit">min</span>
+    </div>
+    <div class="workout__details">
+      <span class="workout__icon">⚡️</span>
+      <span class="workout__value">${
+        isRunning ? workout.pace : workout.speed
+      }</span>
+      <span class="workout__unit">${isRunning ? 'min/mi' : 'mph'}</span>
+    </div>
+    <div class="workout__details">
+      <span class="workout__icon">${isRunning ? '🦶🏼' : '⛰'}</span>
+      <span class="workout__value">${
+        isRunning ? workout.cadence : workout.elevationGain
+      }</span>
+      <span class="workout__unit">${isRunning ? 'spm' : 'ft'}</span>
+    </div>
+  </li>`;
+
+    containerWorkouts.insertAdjacentHTML('beforeend', workoutDetails);
+  }
+
+  _renderWorkoutMarker(coords, classType) {
+    // Shows Marker
+    L.marker(coords)
       .addTo(this.#map)
       .bindPopup(
         L.popup({
@@ -120,15 +180,30 @@ class App {
           minWidth: 100,
           autoClose: false,
           closeOnClick: false,
-          //   content: '🏋🏼‍♀️ Workout',
-          className: 'running-popup',
+          content: `${
+            classType === 'running' ? '🏃🏽‍♂️ Running' : '🚴🏽‍♂️ Cycling'
+          } Workout`,
+          className: `${classType}-popup`,
         })
       )
-      .setPopupContent('🏀 Workout')
+      // .setPopupContent('🏀 Workout')
       .openPopup();
-
-    form.classList.add('hidden');
+    this._hideForm();
   }
+
+  _hideForm() {
+    form.classList.add('hidden');
+    inputDistance.value =
+      inputDuration.value =
+      inputCadence.value =
+      inputElevation.value =
+        '';
+  }
+
+  _moveToPopup(e) {}
+  _setLocalStorage() {}
+  _getLocalStorage() {}
+  reset() {}
 }
 
 // Will Trigger Constructor Function Automatically
