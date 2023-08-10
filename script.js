@@ -22,6 +22,12 @@ class Workout {
     this.coords = coords; // Lat & Long
     // this.date = date;
   }
+
+  _setDescription() {
+    this.description = `${this.type === 'running' ? 'Running' : 'Cycling'} on ${
+      months[this.date.getMonth()]
+    } ${this.date.getDate()}`;
+  }
 }
 
 class Running extends Workout {
@@ -30,6 +36,7 @@ class Running extends Workout {
     super(coords, distance, duration);
     this.cadence = cadence;
     this.calcPace();
+    this._setDescription();
   }
 
   calcPace() {
@@ -44,6 +51,7 @@ class Cycling extends Workout {
     super(coords, distance, duration);
     this.elevationGain = elevationGain;
     this.calcSpeed();
+    this._setDescription();
   }
 
   calcSpeed() {
@@ -105,6 +113,15 @@ class App {
     inputDistance.focus();
   }
 
+  _hideForm() {
+    form.classList.add('hidden');
+    inputDistance.value =
+      inputDuration.value =
+      inputCadence.value =
+      inputElevation.value =
+        '';
+  }
+
   _toggleElevationField() {
     inputElevation.parentElement.classList.toggle('form__row--hidden');
     inputCadence.parentElement.classList.toggle('form__row--hidden');
@@ -159,7 +176,7 @@ class App {
     this.#workouts.push(workout);
     this._renderWorkoutMarker(workout);
     this._renderWorkout(workout);
-    console.log(this.#workouts);
+    console.log(workout);
 
     this._hideForm();
   }
@@ -169,15 +186,13 @@ class App {
 
     const workoutDetails = `
     <li class="workout workout--${workout.type}" data-id="${workout.id}">
-    <h2 class="workout__title">${isRunning ? 'Running' : 'Cycling'} on ${
-      months[workout.date.getMonth()]
-    } ${workout.date.getDate()}</h2>
-    <div class="workout__details">
-      <span class="workout__icon">${isRunning ? '🏃‍♂️' : '🚴🏽‍♂️'}</span>
-      <span class="workout__value">${workout.distance}</span>
-      <span class="workout__unit">mi</span>
-    </div>
-    <div class="workout__details">
+       <h2 class="workout__title">${workout.description}</h2>
+      <div class="workout__details">
+        <span class="workout__icon">${isRunning ? '🏃‍♂️' : '🚴🏽‍♂️'}</span>
+        <span class="workout__value">${workout.distance}</span>
+        <span class="workout__unit">mi</span>
+     </div>
+     <div class="workout__details">
       <span class="workout__icon">⏱</span>
       <span class="workout__value">${workout.duration}</span>
       <span class="workout__unit">min</span>
@@ -198,7 +213,7 @@ class App {
     </div>
   </li>`;
 
-    containerWorkouts.insertAdjacentHTML('beforeend', workoutDetails);
+    form.insertAdjacentHTML('afterend', workoutDetails);
   }
 
   _renderWorkoutMarker(workoutObj) {
@@ -211,23 +226,18 @@ class App {
           minWidth: 100,
           autoClose: false,
           closeOnClick: false,
-          content: `${
-            workoutObj.type === 'running' ? '🏃🏽‍♂️ Running' : '🚴🏽‍♂️ Cycling'
-          } Workout`,
+          // content: `${
+          //   workoutObj.type === 'running' ? 'Running' : 'Cycling'
+          // } on ${months[workout.date.getMonth()]} ${workout.date.getDate()}`,
           className: `${workoutObj.type}-popup`,
         })
       )
-      // .setPopupContent('🏀 Workout')
+      .setPopupContent(
+        `${workoutObj.type === 'running' ? '🏃🏽‍♂️ Running' : '🚴🏽‍♂️ Cycling'} on ${
+          months[workoutObj.date.getMonth()]
+        } ${workoutObj.date.getDate()}`
+      )
       .openPopup();
-  }
-
-  _hideForm() {
-    form.classList.add('hidden');
-    inputDistance.value =
-      inputDuration.value =
-      inputCadence.value =
-      inputElevation.value =
-        '';
   }
 
   _moveToPopup(e) {
