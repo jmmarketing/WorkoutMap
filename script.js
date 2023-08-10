@@ -15,6 +15,7 @@ const inputElevation = document.querySelector('.form__input--elevation');
 class Workout {
   date = new Date();
   id = (Date.now() + '').slice(-10);
+  clicks = 0;
   constructor(coords, distance, duration) {
     // this.id = id;
     this.distance = distance; // in Miles
@@ -27,6 +28,10 @@ class Workout {
     this.description = `${this.type === 'running' ? 'Running' : 'Cycling'} on ${
       months[this.date.getMonth()]
     } ${this.date.getDate()}`;
+  }
+
+  click() {
+    this.clicks++;
   }
 }
 
@@ -248,9 +253,11 @@ class App {
     /// Guard clause - prevents continuing if falsy
     if (!clickedWorkout) return;
 
-    const workoutObj = this.#workouts.find(obj => {
-      return obj.id === clickedWorkout.dataset.id;
-    });
+    const workoutObj = this.#workouts.find(
+      obj => obj.id === clickedWorkout.dataset.id
+    );
+    console.log(workoutObj);
+    workoutObj.click?.() ?? console.log('No CLick! Stripped in Localstorage'); // Does not work on objects loaded from local storage -- loses prototypal inheritence when parsed from string.
 
     this.#map.setView(workoutObj.coords, 13, {
       animate: true,
