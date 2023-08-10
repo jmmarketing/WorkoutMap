@@ -105,6 +105,7 @@ class App {
 
     // Event listener for Clicks on Map
     this.#map.on('click', this._showForm.bind(this));
+    setTimeout(this._getLocalStorage(), 1500);
   }
 
   _showForm(mapE) {
@@ -176,6 +177,7 @@ class App {
     this.#workouts.push(workout);
     this._renderWorkoutMarker(workout);
     this._renderWorkout(workout);
+    this._setLocalStorage();
     console.log(workout);
 
     this._hideForm();
@@ -251,8 +253,30 @@ class App {
     }
   }
 
-  _setLocalStorage() {}
-  _getLocalStorage() {}
+  _setLocalStorage() {
+    const localWorkouts = JSON.stringify(this.#workouts);
+    localStorage.setItem('savedWorkouts', localWorkouts);
+  }
+
+  _getLocalStorage() {
+    if (localStorage.savedWorkouts) {
+      const storedWorkouts = JSON.parse(localStorage.getItem('savedWorkouts'));
+      console.log(storedWorkouts);
+
+      for (const workout of storedWorkouts) {
+        console.log(workout);
+        //Needed to add new Date because parsing localstorage changes to string, that can not use .getMonth in _renderWorkoutMarker - Converts back to Date object
+        workout.date = new Date(workout.date);
+        this._getWorkouts().push(workout);
+        this._renderWorkout(workout);
+        this._renderWorkoutMarker(workout);
+      }
+    }
+  }
+
+  _getWorkouts() {
+    return this.#workouts;
+  }
   reset() {}
 }
 
