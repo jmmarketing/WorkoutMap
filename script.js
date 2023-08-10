@@ -79,6 +79,8 @@ class App {
   constructor() {
     // Will Trigger Method On Child Class Creation
     this._getPosition();
+
+    this._getLocalStorage();
     // Adds Listens for Submit event on Form (Currently only Enter Button)
     form.addEventListener('submit', this._newWorkout.bind(this));
     // Adds Event Listener on Form Change (Doesnt call this in function so no need to bind)
@@ -110,7 +112,10 @@ class App {
 
     // Event listener for Clicks on Map
     this.#map.on('click', this._showForm.bind(this));
-    setTimeout(this._getLocalStorage(), 1500);
+
+    this.#workouts.forEach(work => {
+      this._renderWorkoutMarker(work);
+    });
   }
 
   _showForm(mapE) {
@@ -240,9 +245,9 @@ class App {
         })
       )
       .setPopupContent(
-        `${workoutObj.type === 'running' ? '🏃🏽‍♂️ Running' : '🚴🏽‍♂️ Cycling'} on ${
-          months[workoutObj.date.getMonth()]
-        } ${workoutObj.date.getDate()}`
+        `${workoutObj.type === 'running' ? '🏃🏽‍♂️' : '🚴🏽‍♂️'} ${
+          workoutObj.description
+        }`
       )
       .openPopup();
   }
@@ -257,7 +262,7 @@ class App {
       obj => obj.id === clickedWorkout.dataset.id
     );
     console.log(workoutObj);
-    workoutObj.click?.() ?? console.log('No CLick! Stripped in Localstorage'); // Does not work on objects loaded from local storage -- loses prototypal inheritence when parsed from string.
+    // workoutObj.click?.() ?? console.log('No CLick! Stripped in Localstorage'); // Does not work on objects loaded from local storage -- loses prototypal inheritence when parsed from string.
 
     this.#map.setView(workoutObj.coords, 13, {
       animate: true,
@@ -271,25 +276,38 @@ class App {
   }
 
   _getLocalStorage() {
-    if (localStorage.savedWorkouts) {
-      const storedWorkouts = JSON.parse(localStorage.getItem('savedWorkouts'));
-      console.log(storedWorkouts);
+    const data = JSON.parse(localStorage.getItem('savedWorkouts'));
 
-      for (const workout of storedWorkouts) {
-        console.log(workout);
-        //Needed to add new Date because parsing localstorage changes to string, that can not use .getMonth in _renderWorkoutMarker - Converts back to Date object
-        workout.date = new Date(workout.date);
-        this._getWorkouts().push(workout);
-        this._renderWorkout(workout);
-        this._renderWorkoutMarker(workout);
-      }
-    }
+    if (!data) return;
+
+    this.#workouts = data;
+
+    this.#workouts.forEach(work => {
+      this._renderWorkout(work);
+      // this._renderWorkoutMarker(work);
+    });
+
+    // if (localStorage.savedWorkouts) {
+    //   const storedWorkouts = JSON.parse(localStorage.getItem('savedWorkouts'));
+    //   console.log(storedWorkouts);
+
+    //   for (const workout of storedWorkouts) {
+    //     console.log(workout);
+    //     //Needed to add new Date because parsing localstorage changes to string, that can not use .getMonth in _renderWorkoutMarker - Converts back to Date object
+    //     workout.date = new Date(workout.date);
+    //     this._getWorkouts().push(workout);
+    //     this._renderWorkout(workout);
+    //     this._renderWorkoutMarker(workout);
+    //   }
+    // }
   }
 
   _getWorkouts() {
     return this.#workouts;
   }
-  reset() {}
+  reset() {
+    location.reload();
+  }
 }
 
 // Will Trigger Constructor Function Automatically
