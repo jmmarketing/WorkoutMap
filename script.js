@@ -243,14 +243,19 @@ class App {
   }
 
   _moveToPopup(e) {
-    if (e.target.closest('.workout')?.dataset.id ?? undefined) {
-      const workoutId = e.target.closest('.workout').dataset.id;
-      for (let workoutItem of this.#workouts) {
-        if (workoutItem.id === workoutId) {
-          this.#map.setView(workoutItem.coords, 13);
-        }
-      }
-    }
+    const clickedWorkout = e.target.closest('.workout');
+
+    /// Guard clause - prevents continuing if falsy
+    if (!clickedWorkout) return;
+
+    const workoutObj = this.#workouts.find(obj => {
+      return obj.id === clickedWorkout.dataset.id;
+    });
+
+    this.#map.setView(workoutObj.coords, 13, {
+      animate: true,
+      pan: { duration: 1 },
+    });
   }
 
   _setLocalStorage() {
